@@ -1,0 +1,65 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  canonicalUrl?: string;
+}
+
+const {
+  title = "EasySlides - Presentador de Diapositivas PDF y PPTX",
+  description = "EasySlides es un visor y presentador de diapositivas PDF y PPTX minimalista y ultra rápido que funciona en tu navegador. Optimizado para controles remotos e inalámbricos.",
+  image = "/favicon.svg",
+  canonicalUrl = "https://easyslides.irammcfly.dev"
+} = Astro.props;
+
+const siteName = "EasySlides";
+const keywords = "EasySlides, Easy Slides, easyslides, presentador pdf, pptx viewer, presentador diapositivas, pdf clicker, clicker de diapositivas, irammcfly";
+---
+
+<!-- SEO Principal -->
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta name="keywords" content={keywords} />
+<meta name="author" content="Iram McFly" />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href={canonicalUrl} />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={new URL(image, canonicalUrl)} />
+<meta property="og:site_name" content={siteName} />
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content={canonicalUrl} />
+<meta property="twitter:title" content={title} />
+<meta property="twitter:description" content={description} />
+<meta property="twitter:image" content={new URL(image, canonicalUrl)} />
+
+<!-- Schema.org JSON-LD Structured Data -->
+<script type="application/ld+json" is:inline>
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "EasySlides",
+    "alternateName": ["Easy Slides", "easyslides"],
+    "url": "https://easyslides.irammcfly.dev",
+    "description": "EasySlides es un visor y presentador de diapositivas PDF y PPTX minimalista y ultra rápido que funciona en tu navegador. Optimizado para controles remotos e inalámbricos.",
+    "applicationCategory": "PresentationSoftware",
+    "operatingSystem": "All",
+    "author": {
+      "@type": "Person",
+      "name": "Iram McFly",
+      "url": "https://irammcfly.dev"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0.00",
+      "priceCurrency": "USD"
+    }
+  }
+</script>

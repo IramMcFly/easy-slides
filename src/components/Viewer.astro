@@ -1,0 +1,327 @@
+---
+---
+<div id="viewer" class="view-screen hidden">
+  <!-- Floating close button (safe exit) -->
+  <button id="btn-close-view" class="close-view-btn" title="Salir de la presentación" data-i18n-title="btnExit">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 6 6 18M6 6l12 12"/>
+    </svg>
+  </button>
+
+  <!-- PDF 3-Canvas sliding layout -->
+  <div id="slider-viewport">
+    <div id="slide-left" class="slide-frame slide-left">
+      <canvas></canvas>
+    </div>
+    <div id="slide-center" class="slide-frame slide-center">
+      <canvas></canvas>
+    </div>
+    <div id="slide-right" class="slide-frame slide-right">
+      <canvas></canvas>
+    </div>
+  </div>
+
+  <!-- Local PowerPoint renderer container -->
+  <div id="pptx-container"></div>
+
+  <!-- Control bar floating overlay -->
+  <div id="control-bar" class="control-bar">
+    <button id="btn-prev" class="control-btn" title="Anterior (←, PageUp)" data-i18n-title="btnPrev">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m15 18-6-6 6-6"/>
+      </svg>
+    </button>
+    
+    <div id="page-display" class="page-display">1 / 1</div>
+    
+    <button id="btn-next" class="control-btn" title="Siguiente (→, PageDown, Espacio, Enter)" data-i18n-title="btnNext">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m9 18 6-6-6-6"/>
+      </svg>
+    </button>
+    
+    <div class="control-separator"></div>
+
+    <button id="btn-fullscreen" class="control-btn" title="Pantalla completa" data-i18n-title="btnFullscreen">
+      <svg class="icon-fs-enter" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+      </svg>
+      <svg class="icon-fs-exit" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Document Loading indicator -->
+  <div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+    <p id="loading-text" style="font-size: 0.9rem; color: var(--text-secondary);">Cargando diapositivas...</p>
+  </div>
+</div>
+
+<style>
+  .view-screen {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-primary);
+    transition: opacity 0.25s var(--transition-normal), visibility 0.25s, background-color var(--transition-fast);
+  }
+
+  .view-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* Viewer Screen */
+  #viewer {
+    background-color: #000000;
+    overflow: hidden;
+  }
+
+  #slider-viewport {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-color: #000000;
+    will-change: transform;
+  }
+
+  /* Slide Positions */
+  .slide-left {
+    transform: translate3d(-100vw, 0, 0);
+  }
+  .slide-center {
+    transform: translate3d(0, 0, 0);
+  }
+  .slide-right {
+    transform: translate3d(100vw, 0, 0);
+  }
+  .slide-far-left {
+    transform: translate3d(-200vw, 0, 0);
+  }
+  .slide-far-right {
+    transform: translate3d(200vw, 0, 0);
+  }
+
+  .slide-frame.animate {
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Note: :global is used to style canvas generated dynamically or in templates */
+  .slide-frame :global(canvas) {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    background-color: #ffffff;
+  }
+
+  /* PowerPoint container */
+  #pptx-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background-color: #000000;
+    overflow: hidden;
+  }
+
+  /* Force PPTX slides to center */
+  #pptx-container :global(> div) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  /* Safe exit close button (Top-Right) */
+  .close-view-btn {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 150;
+    background: #121212;
+    border: 1px solid #262626;
+    color: #8e8e8e;
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), opacity 0.25s var(--transition-normal), transform 0.25s var(--transition-normal);
+  }
+
+  .close-view-btn:hover {
+    background: #262626;
+    color: #ffffff;
+    border-color: #404040;
+  }
+
+  .close-view-btn.idle {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0);
+    pointer-events: none;
+  }
+
+  :global(html.light) .close-view-btn {
+    background: #f5f5f5;
+    border: 1px solid #e5e5e5;
+    color: #6b6b6b;
+  }
+
+  :global(html.light) .close-view-btn:hover {
+    background: #ebebeb;
+    color: #000000;
+    border-color: #c7c7c7;
+  }
+
+  /* Control Bar */
+  .control-bar {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translate3d(-50%, 0, 0);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.45rem 1.15rem;
+    background: #121212;
+    border: 1px solid #262626;
+    border-radius: 4px;
+    transition: opacity 0.25s var(--transition-normal), transform 0.25s var(--transition-normal);
+  }
+
+  .control-bar.idle {
+    opacity: 0;
+    transform: translate3d(-50%, 10px, 0);
+    pointer-events: none;
+  }
+
+  .control-btn {
+    background: transparent;
+    border: none;
+    color: #8e8e8e;
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .control-btn:hover {
+    background: #262626;
+    color: #ffffff;
+  }
+
+  .control-btn:active {
+    background: #404040;
+  }
+
+  :global(html.light) .control-bar {
+    background: #f5f5f5;
+    border: 1px solid #e5e5e5;
+  }
+
+  :global(html.light) .control-btn {
+    color: #6b6b6b;
+  }
+
+  :global(html.light) .control-btn:hover {
+    background: #ebebeb;
+    color: #000000;
+  }
+
+  :global(html.light) .control-btn:active {
+    background: #c7c7c7;
+  }
+
+  .page-display {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #8e8e8e;
+    min-width: 60px;
+    text-align: center;
+    user-select: none;
+    letter-spacing: 0.05em;
+  }
+
+  :global(html.light) .page-display {
+    color: #6b6b6b;
+  }
+
+  .control-separator {
+    width: 1px;
+    height: 16px;
+    background-color: #262626;
+  }
+
+  :global(html.light) .control-separator {
+    background-color: #e5e5e5;
+  }
+
+  /* Loading Overlay */
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+    opacity: 0.95;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>

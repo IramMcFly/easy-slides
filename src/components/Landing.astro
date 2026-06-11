@@ -1,0 +1,254 @@
+---
+---
+<div id="landing" class="view-screen">
+  <!-- Landing Header for global toggles -->
+  <div class="landing-header" id="landing-header">
+    <button id="btn-theme-toggle" class="header-btn" title="Cambiar tema">
+      <!-- Sun Icon (switch to light theme) -->
+      <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+      </svg>
+      <!-- Moon Icon (switch to dark theme) -->
+      <svg class="icon-moon" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+      </svg>
+    </button>
+    <button id="btn-lang-toggle" class="header-btn lang-toggle-btn" title="Cambiar idioma">
+      ES
+    </button>
+  </div>
+
+  <div class="landing-content">
+    <div class="logo-container">
+      <h1 class="logo-title" data-i18n="title">Easy Slides</h1>
+      <p class="logo-subtitle" id="landing-subtitle" data-i18n="subtitle">Presentador de Diapositivas Minimalista</p>
+    </div>
+
+    <div id="dropzone" class="dropzone-card">
+      <div class="upload-icon-container">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" x2="12" y1="3" y2="15"/>
+        </svg>
+      </div>
+      <div class="dropzone-text">
+        <h3 class="dropzone-title" data-i18n="dropzoneTitle">Arrastra tu archivo aquí</h3>
+        <p class="dropzone-desc" data-i18n="dropzoneDesc">Soporta formatos PDF y PPTX</p>
+      </div>
+      <button class="browse-button" type="button" data-i18n="btnBrowse">Seleccionar archivo</button>
+      <input type="file" id="file-input" accept="application/pdf, application/vnd.openxmlformats-officedocument.presentationml.presentation" style="display: none;" />
+    </div>
+
+    <div class="clicker-hint">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="7" ry="7"/>
+        <path d="M12 6v4"/>
+      </svg>
+      <span data-i18n="hint">Optimizado para apuntadores y controles remotos</span>
+    </div>
+  </div>
+
+  <footer class="studio-footer">
+    Iram McFly Studios ©
+  </footer>
+</div>
+
+<style>
+  .view-screen {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-primary);
+    transition: opacity 0.25s var(--transition-normal), visibility 0.25s, background-color var(--transition-fast);
+  }
+
+  .view-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* Landing Header */
+  .landing-header {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 100;
+  }
+
+  .header-btn {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    height: 38px;
+    padding: 0 0.85rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .header-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+  }
+
+  #btn-theme-toggle {
+    width: 38px;
+    padding: 0;
+  }
+
+  /* Landing Screen */
+  #landing {
+    padding: 2rem;
+    overflow-y: auto;
+  }
+
+  .landing-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 440px;
+    width: 100%;
+    gap: 2.5rem;
+    z-index: 10;
+  }
+
+  .logo-container {
+    text-align: center;
+  }
+
+  .logo-title {
+    font-family: var(--font-title);
+    font-size: 3.25rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+  }
+
+  .logo-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Dropzone Card */
+  .dropzone-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    width: 100%;
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  }
+
+  .dropzone-card:hover, .dropzone-card.drag-active {
+    border-color: var(--accent);
+  }
+
+  .dropzone-card.drag-active {
+    background: var(--bg-tertiary);
+  }
+
+  .upload-icon-container {
+    width: 52px;
+    height: 52px;
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-fast);
+  }
+
+  .dropzone-card:hover .upload-icon-container {
+    color: var(--text-primary);
+  }
+
+  .dropzone-text {
+    text-align: center;
+  }
+
+  .dropzone-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.35rem;
+    color: var(--text-primary);
+  }
+
+  .dropzone-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  .browse-button {
+    background: var(--accent);
+    color: var(--bg-primary);
+    border: 1px solid var(--accent);
+    padding: 0.65rem 1.6rem;
+    border-radius: 4px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .browse-button:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+  }
+
+  .clicker-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    padding: 0.45rem 1.1rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+  }
+
+  .studio-footer {
+    position: absolute;
+    bottom: 2rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.25em;
+    font-weight: 500;
+    text-transform: uppercase;
+    text-align: center;
+    user-select: none;
+  }
+</style>

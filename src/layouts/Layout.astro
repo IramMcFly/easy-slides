@@ -1,3 +1,13 @@
+---
+import SEO from '../components/SEO.astro';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const { title, description } = Astro.props;
+---
 <!doctype html>
 <html lang="es">
 	<head>
@@ -6,7 +16,8 @@
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Easy Slides</title>
+		
+		<SEO title={title} description={description} />
 		
 		<!-- Google Fonts: Outfit (headings) & Inter (body) -->
 		<link rel="preconnect" href="https://fonts.googleapis.com">

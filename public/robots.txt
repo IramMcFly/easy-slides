@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://easyslides.irammcfly.dev/sitemap.xml
