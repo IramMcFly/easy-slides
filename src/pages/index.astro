@@ -1,11 +1,1355 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
 <Layout>
-	<Welcome />
+	<!-- Landing Screen -->
+	<div id="landing" class="view-screen">
+		<!-- Landing Header for global toggles -->
+		<div class="landing-header" id="landing-header">
+			<button id="btn-theme-toggle" class="header-btn" title="Cambiar tema">
+				<!-- Sun Icon (switch to light theme) -->
+				<svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+				</svg>
+				<!-- Moon Icon (switch to dark theme) -->
+				<svg class="icon-moon" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+				</svg>
+			</button>
+			<button id="btn-lang-toggle" class="header-btn lang-toggle-btn" title="Cambiar idioma">
+				ES
+			</button>
+		</div>
+
+		<div class="landing-content">
+			<div class="logo-container">
+				<h1 class="logo-title" data-i18n="title">Easy Slides</h1>
+				<p class="logo-subtitle" id="landing-subtitle" data-i18n="subtitle">Presentador de Diapositivas Minimalista</p>
+			</div>
+
+			<div id="dropzone" class="dropzone-card">
+				<div class="upload-icon-container">
+					<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+						<polyline points="17 8 12 3 7 8"/>
+						<line x1="12" x2="12" y1="3" y2="15"/>
+					</svg>
+				</div>
+				<div class="dropzone-text">
+					<h3 class="dropzone-title" data-i18n="dropzoneTitle">Arrastra tu archivo aquí</h3>
+					<p class="dropzone-desc" data-i18n="dropzoneDesc">Soporta formatos PDF y PPTX</p>
+				</div>
+				<button class="browse-button" type="button" data-i18n="btnBrowse">Seleccionar archivo</button>
+				<input type="file" id="file-input" accept="application/pdf, application/vnd.openxmlformats-officedocument.presentationml.presentation" style="display: none;" />
+			</div>
+
+			<div class="clicker-hint">
+				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<rect x="5" y="2" width="14" height="20" rx="7" ry="7"/>
+					<path d="M12 6v4"/>
+				</svg>
+				<span data-i18n="hint">Optimizado para apuntadores y controles remotos</span>
+			</div>
+		</div>
+
+		<footer class="studio-footer">
+			Iram McFly Studios ©
+		</footer>
+	</div>
+
+	<!-- Error notification banner -->
+	<div id="error-banner" class="error-banner" style="display: none;">
+		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>
+		</svg>
+		<span id="error-message">Error</span>
+	</div>
+
+	<!-- Presentation Viewer -->
+	<div id="viewer" class="view-screen hidden">
+		<!-- Floating close button (safe exit) -->
+		<button id="btn-close-view" class="close-view-btn" title="Salir de la presentación" data-i18n-title="btnExit">
+			<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M18 6 6 18M6 6l12 12"/>
+			</svg>
+		</button>
+
+		<!-- PDF 3-Canvas sliding layout -->
+		<div id="slider-viewport">
+			<div id="slide-left" class="slide-frame slide-left">
+				<canvas></canvas>
+			</div>
+			<div id="slide-center" class="slide-frame slide-center">
+				<canvas></canvas>
+			</div>
+			<div id="slide-right" class="slide-frame slide-right">
+				<canvas></canvas>
+			</div>
+		</div>
+
+		<!-- Local PowerPoint renderer container -->
+		<div id="pptx-container"></div>
+
+		<!-- Control bar floating overlay -->
+		<div id="control-bar" class="control-bar">
+			<button id="btn-prev" class="control-btn" title="Anterior (←, PageUp)" data-i18n-title="btnPrev">
+				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="m15 18-6-6 6-6"/>
+				</svg>
+			</button>
+			
+			<div id="page-display" class="page-display">1 / 1</div>
+			
+			<button id="btn-next" class="control-btn" title="Siguiente (→, PageDown, Espacio, Enter)" data-i18n-title="btnNext">
+				<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="m9 18 6-6-6-6"/>
+				</svg>
+			</button>
+			
+			<div class="control-separator"></div>
+
+			<button id="btn-fullscreen" class="control-btn" title="Pantalla completa" data-i18n-title="btnFullscreen">
+				<svg class="icon-fs-enter" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+				</svg>
+				<svg class="icon-fs-exit" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/>
+				</svg>
+			</button>
+		</div>
+
+		<!-- Document Loading indicator -->
+		<div id="loading-overlay" class="loading-overlay" style="display: none;">
+			<div class="loading-spinner"></div>
+			<p id="loading-text" style="font-size: 0.9rem; color: var(--text-secondary);">Cargando diapositivas...</p>
+		</div>
+	</div>
 </Layout>
+
+<style>
+	.view-screen {
+		width: 100vw;
+		height: 100vh;
+		position: absolute;
+		top: 0;
+		left: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		background-color: var(--bg-primary);
+		transition: opacity 0.25s var(--transition-normal), visibility 0.25s, background-color var(--transition-fast);
+	}
+
+	.view-screen.hidden {
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+	}
+
+	/* Landing Header */
+	.landing-header {
+		position: absolute;
+		top: 1.5rem;
+		right: 1.5rem;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		z-index: 100;
+	}
+
+	.header-btn {
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-color);
+		color: var(--text-secondary);
+		height: 38px;
+		padding: 0 0.85rem;
+		border-radius: 9999px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-family: var(--font-body);
+		font-size: 0.8rem;
+		font-weight: 600;
+		letter-spacing: 0.05em;
+		cursor: pointer;
+		transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+	}
+
+	.header-btn:hover {
+		background: var(--bg-tertiary);
+		color: var(--text-primary);
+		border-color: var(--border-hover);
+	}
+
+	#btn-theme-toggle {
+		width: 38px;
+		padding: 0;
+	}
+
+	/* Landing Screen */
+	#landing {
+		padding: 2rem;
+		overflow-y: auto;
+	}
+
+	.landing-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		max-width: 440px;
+		width: 100%;
+		gap: 2.5rem;
+		z-index: 10;
+	}
+
+	.logo-container {
+		text-align: center;
+	}
+
+	.logo-title {
+		font-family: var(--font-title);
+		font-size: 3.25rem;
+		font-weight: 800;
+		letter-spacing: -0.04em;
+		color: var(--text-primary);
+		margin-bottom: 0.4rem;
+	}
+
+	.logo-subtitle {
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		font-weight: 500;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	/* Dropzone Card */
+	.dropzone-card {
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-color);
+		border-radius: 4px;
+		width: 100%;
+		padding: 3rem 2rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1.5rem;
+		cursor: pointer;
+		transition: border-color var(--transition-fast), background-color var(--transition-fast);
+	}
+
+	.dropzone-card:hover, .dropzone-card.drag-active {
+		border-color: var(--accent);
+	}
+
+	.dropzone-card.drag-active {
+		background: var(--bg-tertiary);
+	}
+
+	.upload-icon-container {
+		width: 52px;
+		height: 52px;
+		border-radius: 4px;
+		background: var(--bg-tertiary);
+		color: var(--text-secondary);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: color var(--transition-fast);
+	}
+
+	.dropzone-card:hover .upload-icon-container {
+		color: var(--text-primary);
+	}
+
+	.dropzone-text {
+		text-align: center;
+	}
+
+	.dropzone-title {
+		font-size: 1.1rem;
+		font-weight: 500;
+		margin-bottom: 0.35rem;
+		color: var(--text-primary);
+	}
+
+	.dropzone-desc {
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+	}
+
+	.browse-button {
+		background: var(--accent);
+		color: var(--bg-primary);
+		border: 1px solid var(--accent);
+		padding: 0.65rem 1.6rem;
+		border-radius: 4px;
+		font-family: var(--font-body);
+		font-weight: 600;
+		font-size: 0.8rem;
+		cursor: pointer;
+		transition: background-color var(--transition-fast), color var(--transition-fast);
+	}
+
+	.browse-button:hover {
+		background: var(--bg-primary);
+		color: var(--text-primary);
+		border-color: var(--border-hover);
+	}
+
+	.clicker-hint {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.75rem;
+		color: var(--text-secondary);
+		background: var(--bg-secondary);
+		padding: 0.45rem 1.1rem;
+		border-radius: 4px;
+		border: 1px solid var(--border-color);
+	}
+
+	.studio-footer {
+		position: absolute;
+		bottom: 2rem;
+		font-size: 0.7rem;
+		color: var(--text-muted);
+		letter-spacing: 0.25em;
+		font-weight: 500;
+		text-transform: uppercase;
+		text-align: center;
+		user-select: none;
+	}
+
+	/* Viewer Screen */
+	#viewer {
+		background-color: #000000;
+		overflow: hidden;
+	}
+
+	#slider-viewport {
+		width: 100%;
+		height: 100%;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.slide-frame {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		background-color: #000000;
+		will-change: transform;
+	}
+
+	/* Slide Positions */
+	.slide-left {
+		transform: translate3d(-100vw, 0, 0);
+	}
+	.slide-center {
+		transform: translate3d(0, 0, 0);
+	}
+	.slide-right {
+		transform: translate3d(100vw, 0, 0);
+	}
+	.slide-far-left {
+		transform: translate3d(-200vw, 0, 0);
+	}
+	.slide-far-right {
+		transform: translate3d(200vw, 0, 0);
+	}
+
+	.slide-frame.animate {
+		transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.slide-frame canvas {
+		display: block;
+		max-width: 100%;
+		max-height: 100%;
+		object-fit: contain;
+		background-color: #ffffff;
+	}
+
+	/* PowerPoint container */
+	#pptx-container {
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		top: 0;
+		left: 0;
+		display: none;
+		align-items: center;
+		justify-content: center;
+		background-color: #000000;
+		overflow: hidden;
+	}
+
+	/* Force PPTX slides to center */
+	#pptx-container > div {
+		display: flex !important;
+		align-items: center !important;
+		justify-content: center !important;
+		overflow: hidden !important;
+	}
+
+	/* Safe exit close button (Top-Right) */
+	.close-view-btn {
+		position: absolute;
+		top: 1.5rem;
+		right: 1.5rem;
+		z-index: 150;
+		background: #121212;
+		border: 1px solid #262626;
+		color: #8e8e8e;
+		width: 40px;
+		height: 40px;
+		border-radius: 4px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), opacity 0.25s var(--transition-normal), transform 0.25s var(--transition-normal);
+	}
+
+	.close-view-btn:hover {
+		background: #262626;
+		color: #ffffff;
+		border-color: #404040;
+	}
+
+	.close-view-btn.idle {
+		opacity: 0;
+		transform: translate3d(0, -10px, 0);
+		pointer-events: none;
+	}
+
+	html.light .close-view-btn {
+		background: #f5f5f5;
+		border: 1px solid #e5e5e5;
+		color: #6b6b6b;
+	}
+
+	html.light .close-view-btn:hover {
+		background: #ebebeb;
+		color: #000000;
+		border-color: #c7c7c7;
+	}
+
+	/* Control Bar */
+	.control-bar {
+		position: absolute;
+		bottom: 2rem;
+		left: 50%;
+		transform: translate3d(-50%, 0, 0);
+		z-index: 100;
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
+		padding: 0.45rem 1.15rem;
+		background: #121212;
+		border: 1px solid #262626;
+		border-radius: 4px;
+		transition: opacity 0.25s var(--transition-normal), transform 0.25s var(--transition-normal);
+	}
+
+	.control-bar.idle {
+		opacity: 0;
+		transform: translate3d(-50%, 10px, 0);
+		pointer-events: none;
+	}
+
+	.control-btn {
+		background: transparent;
+		border: none;
+		color: #8e8e8e;
+		width: 36px;
+		height: 36px;
+		border-radius: 4px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		font-family: var(--font-body);
+		font-size: 0.75rem;
+		font-weight: 700;
+		transition: background-color var(--transition-fast), color var(--transition-fast);
+	}
+
+	.control-btn:hover {
+		background: #262626;
+		color: #ffffff;
+	}
+
+	.control-btn:active {
+		background: #404040;
+	}
+
+	html.light .control-bar {
+		background: #f5f5f5;
+		border: 1px solid #e5e5e5;
+	}
+
+	html.light .control-btn {
+		color: #6b6b6b;
+	}
+
+	html.light .control-btn:hover {
+		background: #ebebeb;
+		color: #000000;
+	}
+
+	html.light .control-btn:active {
+		background: #c7c7c7;
+	}
+
+	.page-display {
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: #8e8e8e;
+		min-width: 60px;
+		text-align: center;
+		user-select: none;
+		letter-spacing: 0.05em;
+	}
+
+	html.light .page-display {
+		color: #6b6b6b;
+	}
+
+	.control-separator {
+		width: 1px;
+		height: 16px;
+		background-color: #262626;
+	}
+
+	html.light .control-separator {
+		background-color: #e5e5e5;
+	}
+
+	/* Error Banner */
+	.error-banner {
+		position: fixed;
+		top: 2rem;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-color);
+		color: var(--text-primary);
+		padding: 0.85rem 1.5rem;
+		border-radius: 12px;
+		font-size: 0.85rem;
+		font-weight: 500;
+		z-index: 1000;
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+		animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	/* Loading Overlay */
+	.loading-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: var(--bg-primary);
+		opacity: 0.95;
+		z-index: 200;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+	}
+
+	.loading-spinner {
+		width: 40px;
+		height: 40px;
+		border: 3px solid var(--border-color);
+		border-top-color: var(--accent);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+</style>
+
+<script>
+	import * as pdfjsLib from 'pdfjs-dist';
+	import { init as initPptx } from 'pptx-preview';
+
+	// Assign PDFJS worker from bundle
+	pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+		'pdfjs-dist/build/pdf.worker.min.mjs',
+		import.meta.url
+	).toString();
+
+	// DOM Elements
+	const landingScreen = document.getElementById('landing')!;
+	const viewerScreen = document.getElementById('viewer')!;
+	const dropzone = document.getElementById('dropzone')!;
+	const fileInput = document.getElementById('file-input') as HTMLInputElement;
+	const browseButton = dropzone.querySelector('.browse-button') as HTMLButtonElement;
+	const errorBanner = document.getElementById('error-banner')!;
+	const errorMessage = document.getElementById('error-message')!;
+	const loadingOverlay = document.getElementById('loading-overlay')!;
+	const loadingText = document.getElementById('loading-text')!;
+	const controlBar = document.getElementById('control-bar')!;
+	const pageDisplay = document.getElementById('page-display')!;
+	
+	const btnPrev = document.getElementById('btn-prev') as HTMLButtonElement;
+	const btnNext = document.getElementById('btn-next') as HTMLButtonElement;
+	const btnFullscreen = document.getElementById('btn-fullscreen') as HTMLButtonElement;
+	const btnCloseView = document.getElementById('btn-close-view') as HTMLButtonElement;
+
+	const btnThemeToggle = document.getElementById('btn-theme-toggle')!;
+	const btnLangToggle = document.getElementById('btn-lang-toggle')!;
+
+	// Slide containers
+	let slideL = document.getElementById('slide-left')!;
+	let slideC = document.getElementById('slide-center')!;
+	let slideR = document.getElementById('slide-right')!;
+
+	// Canvas elements
+	let canvasRoleL = slideL.querySelector('canvas')!;
+	let canvasRoleC = slideC.querySelector('canvas')!;
+	let canvasRoleR = slideR.querySelector('canvas')!;
+
+	// PPTX container
+	const pptxContainer = document.getElementById('pptx-container')!;
+
+	// --- State Variables ---
+	let pdfDoc: any = null;
+	let pptxPreviewer: any = null;
+	let isPPTXMode = false;
+	let fileData: ArrayBuffer | null = null;
+	
+	let currentPageNum = 1;
+	let totalPages = 0;
+	let isTransitioning = false;
+	
+	const activeRenderTasks = new Map<HTMLCanvasElement, any>();
+	let errorTimeoutId: any = null;
+	let idleTimeoutId: any = null;
+	
+	let currentLang = 'es';
+	let currentTheme = 'dark';
+
+	// --- i18n Translations Dictionary ---
+	const translations: Record<string, Record<string, string>> = {
+		es: {
+			title: "Easy Slides",
+			subtitle: "Presentador de Diapositivas ultra optimizado",
+			dropzoneTitle: "Arrastra tu archivo aquí",
+			dropzoneDesc: "Soporta formatos PDF y PPTX",
+			btnBrowse: "Seleccionar archivo",
+			hint: "Optimizado para apuntadores y controles remotos",
+			errInvalidFile: "Por favor, selecciona un archivo PDF o PPTX válido.",
+			errRead: "Error al leer el archivo. Inténtalo de nuevo.",
+			errInit: "No se pudo procesar el archivo. Verifica el formato.",
+			btnPrev: "Anterior (←, PageUp)",
+			btnNext: "Siguiente (→, PageDown, Espacio, Enter)",
+			btnFullscreen: "Pantalla completa",
+			btnExit: "Salir de la presentación (X)",
+			loading: "Cargando diapositivas..."
+		},
+		en: {
+			title: "Easy Slides",
+			subtitle: "Ultra light Slide Presenter",
+			dropzoneTitle: "Drag your file here",
+			dropzoneDesc: "Supports PDF and PPTX formats",
+			btnBrowse: "Select file",
+			hint: "Optimized for remote pointers and clickers",
+			errInvalidFile: "Please select a valid PDF or PPTX file.",
+			errRead: "Error reading file. Please try again.",
+			errInit: "Could not process file. Check format.",
+			btnPrev: "Previous (←, PageUp)",
+			btnNext: "Next (→, PageDown, Space, Enter)",
+			btnFullscreen: "Fullscreen",
+			btnExit: "Exit presentation (X)",
+			loading: "Loading slides..."
+		}
+	};
+
+	// Initialize Languages & Themes
+	initLanguage();
+	initTheme();
+
+	// --- i18n & THEME CONTROLS ---
+
+	function initLanguage() {
+		let savedLang = localStorage.getItem('easy-slides-lang');
+		if (!savedLang) {
+			const navLang = navigator.language || '';
+			savedLang = navLang.startsWith('en') ? 'en' : 'es';
+		}
+		setLanguage(savedLang);
+	}
+
+	function setLanguage(lang: string) {
+		currentLang = lang;
+		localStorage.setItem('easy-slides-lang', lang);
+
+		// Update toggle buttons text (show other language option)
+		const otherLang = lang === 'es' ? 'EN' : 'ES';
+		document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
+			btn.textContent = otherLang;
+		});
+
+		// Translate standard tags
+		document.querySelectorAll('[data-i18n]').forEach(el => {
+			const key = el.getAttribute('data-i18n');
+			if (key && translations[lang][key]) {
+				el.textContent = translations[lang][key];
+			}
+		});
+
+		// Translate title attributes
+		document.querySelectorAll('[data-i18n-title]').forEach(el => {
+			const key = el.getAttribute('data-i18n-title');
+			if (key && translations[lang][key]) {
+				el.setAttribute('title', translations[lang][key]);
+			}
+		});
+		
+		// Translate loading text
+		if (loadingText) {
+			loadingText.textContent = translations[lang].loading;
+		}
+	}
+
+	function initTheme() {
+		const savedTheme = localStorage.getItem('easy-slides-theme') || 'dark';
+		setTheme(savedTheme);
+	}
+
+	function setTheme(theme: string) {
+		currentTheme = theme;
+		localStorage.setItem('easy-slides-theme', theme);
+
+		const htmlEl = document.documentElement;
+		if (theme === 'light') {
+			htmlEl.classList.add('light');
+		} else {
+			htmlEl.classList.remove('light');
+		}
+
+		// Toggle icons
+		const sunIcons = document.querySelectorAll('.icon-sun');
+		const moonIcons = document.querySelectorAll('.icon-moon');
+
+		if (theme === 'light') {
+			sunIcons.forEach(el => (el as HTMLElement).style.display = 'none');
+			moonIcons.forEach(el => (el as HTMLElement).style.display = 'block');
+		} else {
+			sunIcons.forEach(el => (el as HTMLElement).style.display = 'block');
+			moonIcons.forEach(el => (el as HTMLElement).style.display = 'none');
+		}
+	}
+
+	// Click events for toggles
+	btnThemeToggle.addEventListener('click', () => {
+		setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+	});
+
+	btnLangToggle.addEventListener('click', () => {
+		setLanguage(currentLang === 'es' ? 'en' : 'es');
+	});
+
+	// --- FILE SELECTION FLOW ---
+
+	dropzone.addEventListener('click', (e) => {
+		if (e.target !== browseButton) {
+			fileInput.click();
+		}
+	});
+
+	browseButton.addEventListener('click', () => {
+		fileInput.click();
+	});
+
+	fileInput.addEventListener('change', () => {
+		const file = fileInput.files?.[0];
+		if (file) {
+			loadUploadedFile(file);
+		}
+	});
+
+	dropzone.addEventListener('dragover', (e) => {
+		e.preventDefault();
+		dropzone.classList.add('drag-active');
+	});
+
+	dropzone.addEventListener('dragleave', () => {
+		dropzone.classList.remove('drag-active');
+	});
+
+	dropzone.addEventListener('drop', (e) => {
+		e.preventDefault();
+		dropzone.classList.remove('drag-active');
+		const file = e.dataTransfer?.files?.[0];
+		if (file) {
+			loadUploadedFile(file);
+		}
+	});
+
+	// Unified File Loader
+	function loadUploadedFile(file: File) {
+		showLoading(true);
+
+		const isPPTX = file.name.toLowerCase().endsWith('.pptx');
+		const isPDF = file.name.toLowerCase().endsWith('.pdf');
+
+		if (!isPPTX && !isPDF) {
+			showError(translations[currentLang].errInvalidFile);
+			showLoading(false);
+			return;
+		}
+
+		const reader = new FileReader();
+		reader.onload = async (e) => {
+			const arrayBuffer = e.target?.result as ArrayBuffer;
+			if (arrayBuffer) {
+				try {
+					if (isPDF) {
+						await initializePDF(arrayBuffer);
+					} else {
+						await initializePPTX(arrayBuffer);
+					}
+				} catch (err: any) {
+					console.error('File load error:', err);
+					showError(translations[currentLang].errInit);
+					showLoading(false);
+				}
+			} else {
+				showError(translations[currentLang].errRead);
+				showLoading(false);
+			}
+		};
+
+		reader.onerror = () => {
+			showError(translations[currentLang].errRead);
+			showLoading(false);
+		};
+
+		reader.readAsArrayBuffer(file);
+	}
+
+	// Initialize local PDF
+	async function initializePDF(data: ArrayBuffer) {
+		isPPTXMode = false;
+		fileData = data;
+		
+		try {
+			const loadingTask = pdfjsLib.getDocument({ data: data });
+			pdfDoc = await loadingTask.promise;
+			totalPages = pdfDoc.numPages;
+			currentPageNum = 1;
+
+			// Switch viewport styles
+			document.getElementById('slider-viewport')!.style.display = 'block';
+			document.getElementById('pptx-container')!.style.display = 'none';
+
+			// Show screens
+			landingScreen.classList.add('hidden');
+			viewerScreen.classList.remove('hidden');
+			showLoading(false);
+
+			resetSlideRoles();
+			await renderCurrentView();
+			
+			updatePDFControlsDisplay();
+			resetIdleTimer();
+		} catch (err) {
+			throw err;
+		}
+	}
+
+	// Initialize local PPTX
+	async function initializePPTX(data: ArrayBuffer) {
+		isPPTXMode = true;
+		fileData = data;
+
+		try {
+			// Switch viewport styles
+			document.getElementById('slider-viewport')!.style.display = 'none';
+			document.getElementById('pptx-container')!.style.display = 'flex';
+			
+			pptxContainer.innerHTML = '';
+
+			// Show screens
+			landingScreen.classList.add('hidden');
+			viewerScreen.classList.remove('hidden');
+
+			const width = window.innerWidth;
+			const height = window.innerHeight;
+
+			// Initialize PPTXPreviewer (mode: slide shows one slide at a time)
+			pptxPreviewer = initPptx(pptxContainer, {
+				width: width,
+				height: height,
+				mode: 'slide'
+			});
+
+			await pptxPreviewer.preview(data);
+			
+			showLoading(false);
+			updatePPTXControlsDisplay();
+			resetIdleTimer();
+		} catch (err) {
+			throw err;
+		}
+	}
+
+	function resetSlideRoles() {
+		slideL = document.getElementById('slide-left')!;
+		slideC = document.getElementById('slide-center')!;
+		slideR = document.getElementById('slide-right')!;
+
+		slideL.className = 'slide-frame slide-left';
+		slideC.className = 'slide-frame slide-center';
+		slideR.className = 'slide-frame slide-right';
+
+		canvasRoleL = slideL.querySelector('canvas')!;
+		canvasRoleC = slideC.querySelector('canvas')!;
+		canvasRoleR = slideR.querySelector('canvas')!;
+	}
+
+	// --- RENDER PIPELINES ---
+
+	// PDF renders
+	async function renderCurrentView() {
+		if (!pdfDoc) return;
+
+		await renderPage(currentPageNum, canvasRoleC);
+
+		if (currentPageNum > 1) {
+			renderPage(currentPageNum - 1, canvasRoleL);
+		} else {
+			clearCanvas(canvasRoleL);
+		}
+
+		if (currentPageNum < totalPages) {
+			renderPage(currentPageNum + 1, canvasRoleR);
+		} else {
+			clearCanvas(canvasRoleR);
+		}
+	}
+
+	async function renderPage(pageNum: number, canvas: HTMLCanvasElement) {
+		if (!pdfDoc || pageNum < 1 || pageNum > totalPages) {
+			clearCanvas(canvas);
+			return;
+		}
+
+		try {
+			const page = await pdfDoc.getPage(pageNum);
+			const ctx = canvas.getContext('2d')!;
+
+			const viewportWidth = window.innerWidth;
+			const viewportHeight = window.innerHeight;
+
+			const unscaledViewport = page.getViewport({ scale: 1 });
+			const scaleX = viewportWidth / unscaledViewport.width;
+			const scaleY = viewportHeight / unscaledViewport.height;
+			const scale = Math.min(scaleX, scaleY);
+
+			const dpr = window.devicePixelRatio || 1;
+			const viewport = page.getViewport({ scale: scale * dpr });
+
+			canvas.width = viewport.width;
+			canvas.height = viewport.height;
+
+			const displayWidth = viewport.width / dpr;
+			const displayHeight = viewport.height / dpr;
+			canvas.style.width = `${displayWidth}px`;
+			canvas.style.height = `${displayHeight}px`;
+
+			if (activeRenderTasks.has(canvas)) {
+				activeRenderTasks.get(canvas).cancel();
+			}
+
+			const renderContext = {
+				canvasContext: ctx,
+				viewport: viewport
+			};
+
+			const renderTask = page.render(renderContext);
+			activeRenderTasks.set(canvas, renderTask);
+
+			await renderTask.promise;
+			activeRenderTasks.delete(canvas);
+		} catch (error: any) {
+			if (error.name !== 'RenderingCancelledException') {
+				console.error(`Error rendering page ${pageNum}:`, error);
+			}
+		}
+	}
+
+	function clearCanvas(canvas: HTMLCanvasElement) {
+		const ctx = canvas.getContext('2d');
+		if (ctx) {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+		}
+		canvas.style.width = '0px';
+		canvas.style.height = '0px';
+		canvas.width = 0;
+		canvas.height = 0;
+	}
+
+	// --- SLIDING ENGINES ---
+
+	function goToNext() {
+		if (isTransitioning) return;
+
+		if (isPPTXMode) {
+			if (pptxPreviewer && pptxPreviewer.currentIndex < pptxPreviewer.slideCount - 1) {
+				pptxPreviewer.renderNextSlide();
+				updatePPTXControlsDisplay();
+			}
+		} else {
+			if (!pdfDoc || currentPageNum >= totalPages) return;
+			isTransitioning = true;
+
+			slideL.classList.add('animate');
+			slideC.classList.add('animate');
+			slideR.classList.add('animate');
+
+			slideL.className = 'slide-frame slide-far-left animate';
+			slideC.className = 'slide-frame slide-left animate';
+			slideR.className = 'slide-frame slide-center animate';
+
+			currentPageNum++;
+			updatePDFControlsDisplay();
+
+			setTimeout(() => {
+				slideL.classList.remove('animate');
+				slideC.classList.remove('animate');
+				slideR.classList.remove('animate');
+
+				const oldL = slideL;
+				const oldC = slideC;
+				const oldR = slideR;
+
+				slideL = oldC;
+				slideC = oldR;
+				slideR = oldL;
+
+				canvasRoleL = slideL.querySelector('canvas')!;
+				canvasRoleC = slideC.querySelector('canvas')!;
+				canvasRoleR = slideR.querySelector('canvas')!;
+
+				slideL.className = 'slide-frame slide-left';
+				slideC.className = 'slide-frame slide-center';
+				slideR.className = 'slide-frame slide-right';
+
+				renderPage(currentPageNum + 1, canvasRoleR);
+				isTransitioning = false;
+			}, 350);
+		}
+	}
+
+	function goToPrev() {
+		if (isTransitioning) return;
+
+		if (isPPTXMode) {
+			if (pptxPreviewer && pptxPreviewer.currentIndex > 0) {
+				pptxPreviewer.renderPreSlide();
+				updatePPTXControlsDisplay();
+			}
+		} else {
+			if (!pdfDoc || currentPageNum <= 1) return;
+			isTransitioning = true;
+
+			slideL.classList.add('animate');
+			slideC.classList.add('animate');
+			slideR.classList.add('animate');
+
+			slideL.className = 'slide-frame slide-center animate';
+			slideC.className = 'slide-frame slide-right animate';
+			slideR.className = 'slide-frame slide-far-right animate';
+
+			currentPageNum--;
+			updatePDFControlsDisplay();
+
+			setTimeout(() => {
+				slideL.classList.remove('animate');
+				slideC.classList.remove('animate');
+				slideR.classList.remove('animate');
+
+				const oldL = slideL;
+				const oldC = slideC;
+				const oldR = slideR;
+
+				slideL = oldR;
+				slideC = oldL;
+				slideR = oldC;
+
+				canvasRoleL = slideL.querySelector('canvas')!;
+				canvasRoleC = slideC.querySelector('canvas')!;
+				canvasRoleR = slideR.querySelector('canvas')!;
+
+				slideL.className = 'slide-frame slide-left';
+				slideC.className = 'slide-frame slide-center';
+				slideR.className = 'slide-frame slide-right';
+
+				renderPage(currentPageNum - 1, canvasRoleL);
+				isTransitioning = false;
+			}, 350);
+		}
+	}
+
+	// --- PAGE INDICATORS & CONTROLS ---
+
+	function updatePDFControlsDisplay() {
+		if (!pdfDoc) return;
+		pageDisplay.textContent = `${currentPageNum} / ${totalPages}`;
+		
+		btnPrev.disabled = (currentPageNum <= 1);
+		btnNext.disabled = (currentPageNum >= totalPages);
+		
+		btnPrev.style.opacity = btnPrev.disabled ? '0.4' : '1';
+		btnNext.style.opacity = btnNext.disabled ? '0.4' : '1';
+		btnPrev.style.cursor = btnPrev.disabled ? 'not-allowed' : 'pointer';
+		btnNext.style.cursor = btnNext.disabled ? 'not-allowed' : 'pointer';
+	}
+
+	function updatePPTXControlsDisplay() {
+		if (!pptxPreviewer) return;
+		const current = pptxPreviewer.currentIndex + 1;
+		const total = pptxPreviewer.slideCount;
+		pageDisplay.textContent = `${current} / ${total}`;
+		
+		btnPrev.disabled = (current <= 1);
+		btnNext.disabled = (current >= total);
+		
+		btnPrev.style.opacity = btnPrev.disabled ? '0.4' : '1';
+		btnNext.style.opacity = btnNext.disabled ? '0.4' : '1';
+		btnPrev.style.cursor = btnPrev.disabled ? 'not-allowed' : 'pointer';
+		btnNext.style.cursor = btnNext.disabled ? 'not-allowed' : 'pointer';
+	}
+
+	// --- KEYBOARD LISTENERS ---
+	document.addEventListener('keydown', (e) => {
+		if (viewerScreen.classList.contains('hidden')) return;
+
+		switch (e.key) {
+			case 'ArrowRight':
+			case 'ArrowDown':
+			case 'PageDown':
+			case ' ':
+				e.preventDefault();
+				if (e.shiftKey) {
+					goToPrev();
+				} else {
+					goToNext();
+				}
+				break;
+			case 'Enter':
+				e.preventDefault();
+				goToNext();
+				break;
+			case 'ArrowLeft':
+			case 'ArrowUp':
+			case 'PageUp':
+			case 'Backspace':
+				e.preventDefault();
+				goToPrev();
+				break;
+			case 'Escape':
+				// ESCAPE ONLY EXITS FULLSCREEN (browser handles natively)
+				// We do NOT call exitPresentation() here as requested.
+				break;
+		}
+	});
+
+	// Navigation Button click handlers
+	btnNext.addEventListener('click', (e) => {
+		e.stopPropagation();
+		goToNext();
+	});
+
+	btnPrev.addEventListener('click', (e) => {
+		e.stopPropagation();
+		goToPrev();
+	});
+
+	btnFullscreen.addEventListener('click', (e) => {
+		e.stopPropagation();
+		toggleFullscreen();
+	});
+
+	btnCloseView.addEventListener('click', (e) => {
+		e.stopPropagation();
+		exitPresentation();
+	});
+
+	// Fullscreen controls
+	function toggleFullscreen() {
+		if (!document.fullscreenElement) {
+			document.documentElement.requestFullscreen().catch((err) => {
+				console.error(`Fullscreen request failed: ${err.message}`);
+			});
+		} else {
+			document.exitFullscreen();
+		}
+	}
+
+	document.addEventListener('fullscreenchange', () => {
+		const isFS = !!document.fullscreenElement;
+		const enterIcon = btnFullscreen.querySelector('.icon-fs-enter') as SVGElement;
+		const exitIcon = btnFullscreen.querySelector('.icon-fs-exit') as SVGElement;
+		
+		if (isFS) {
+			enterIcon.style.display = 'none';
+			exitIcon.style.display = 'block';
+		} else {
+			enterIcon.style.display = 'block';
+			exitIcon.style.display = 'none';
+		}
+	});
+
+	// Exit and clear presentation state
+	function exitPresentation() {
+		if (document.fullscreenElement) {
+			document.exitFullscreen();
+		}
+
+		viewerScreen.classList.add('hidden');
+		landingScreen.classList.remove('hidden');
+
+		// Clear variables
+		pdfDoc = null;
+		fileInput.value = '';
+		totalPages = 0;
+		currentPageNum = 1;
+
+		clearCanvas(canvasRoleL);
+		clearCanvas(canvasRoleC);
+		clearCanvas(canvasRoleR);
+
+		// Clear PPTX state
+		if (pptxPreviewer) {
+			try {
+				pptxPreviewer.destroy();
+			} catch (e) {
+				console.error('Error destroying PPTX previewer:', e);
+			}
+			pptxPreviewer = null;
+		}
+		pptxContainer.innerHTML = '';
+		
+		fileData = null;
+		isPPTXMode = false;
+	}
+
+	// --- WINDOW RESIZE ENGINE ---
+	let resizeTimeoutId: any = null;
+	window.addEventListener('resize', () => {
+		if (viewerScreen.classList.contains('hidden') || !fileData) return;
+		
+		clearTimeout(resizeTimeoutId);
+		resizeTimeoutId = setTimeout(async () => {
+			showLoading(true);
+
+			if (isPPTXMode && pptxPreviewer) {
+				// PPTX Resize: Destroy and rebuild with new viewport dims
+				const savedIndex = pptxPreviewer.currentIndex;
+				pptxPreviewer.destroy();
+				pptxContainer.innerHTML = '';
+
+				const width = window.innerWidth;
+				const height = window.innerHeight;
+
+				pptxPreviewer = initPptx(pptxContainer, {
+					width: width,
+					height: height,
+					mode: 'slide'
+				});
+
+				await pptxPreviewer.preview(fileData);
+
+				// Fast-forward to saved slide index
+				for (let i = 0; i < savedIndex; i++) {
+					pptxPreviewer.renderNextSlide();
+				}
+				
+				updatePPTXControlsDisplay();
+			} else {
+				// PDF Resize: Re-render canvases
+				resetSlideRoles();
+				await renderCurrentView();
+			}
+
+			showLoading(false);
+		}, 150);
+	});
+
+	// --- IDLE AUTO-HIDE ---
+	function resetIdleTimer() {
+		controlBar.classList.remove('idle');
+		btnCloseView.classList.remove('idle');
+		clearTimeout(idleTimeoutId);
+		
+		idleTimeoutId = setTimeout(() => {
+			if (!viewerScreen.classList.contains('hidden')) {
+				controlBar.classList.add('idle');
+				btnCloseView.classList.add('idle');
+			}
+		}, 2500);
+	}
+
+	viewerScreen.addEventListener('mousemove', () => {
+		resetIdleTimer();
+	});
+
+	controlBar.addEventListener('mouseenter', () => {
+		clearTimeout(idleTimeoutId);
+		controlBar.classList.remove('idle');
+	});
+
+	controlBar.addEventListener('mouseleave', () => {
+		resetIdleTimer();
+	});
+
+	btnCloseView.addEventListener('mouseenter', () => {
+		clearTimeout(idleTimeoutId);
+		btnCloseView.classList.remove('idle');
+	});
+
+	btnCloseView.addEventListener('mouseleave', () => {
+		resetIdleTimer();
+	});
+
+	// --- NOTIFICATION & LOADING UTILITIES ---
+	function showLoading(show: boolean) {
+		loadingOverlay.style.display = show ? 'flex' : 'none';
+	}
+
+	function showError(msg: string) {
+		clearTimeout(errorTimeoutId);
+		errorMessage.textContent = msg;
+		errorBanner.style.display = 'flex';
+
+		errorTimeoutId = setTimeout(() => {
+			errorBanner.style.display = 'none';
+		}, 4000);
+	}
+</script>
